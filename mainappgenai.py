@@ -1428,8 +1428,17 @@ FORMAT OUTPUT — WAJIB DIIKUTI:
             if user_input and user_input.strip():
                 user_text = user_input.strip()
                 st.session_state.chat_messages.append({"role": "user", "content": user_text})
-                st.session_state["pending_chat"] = user_text
-                st.rerun()
+                with st.chat_message("user", avatar="🧑"):
+                    st.markdown(user_text)
+                with st.chat_message("assistant", avatar="🤖"):
+                    try:
+                        reply = st.write_stream(
+                            _stream_reply(
+                                st.session_state.chat_messages[:-1], user_text))
+                        st.session_state.chat_messages.append(
+                            {"role": "assistant", "content": _fmt(str(reply))})
+                    except Exception as e:
+                        st.error(f"Gagal menghubungi Gemini AI: {e}")
             
             # ── Tampilkan riwayat chat (pakai st.chat_message native) ──
             for msg in st.session_state.chat_messages:
@@ -1468,19 +1477,6 @@ FORMAT OUTPUT — WAJIB DIIKUTI:
                         reply = st.write_stream(
                             _stream_reply(
                                 st.session_state.chat_messages[:-1], sug))
-                        st.session_state.chat_messages.append(
-                            {"role": "assistant", "content": _fmt(str(reply))})
-                    except Exception as e:
-                        st.error(f"Gagal menghubungi Gemini AI: {e}")
-
-            # ── Proses pending chat (setelah rerun, urutan render bersih) ──
-            if st.session_state.get("pending_chat"):
-                user_text = st.session_state.pop("pending_chat")
-                with st.chat_message("assistant", avatar="🤖"):
-                    try:
-                        reply = st.write_stream(
-                            _stream_reply(
-                                st.session_state.chat_messages[:-1], user_text))
                         st.session_state.chat_messages.append(
                             {"role": "assistant", "content": _fmt(str(reply))})
                     except Exception as e:
