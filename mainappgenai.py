@@ -464,7 +464,7 @@ def download_models():
         if needs_download:
             with st.spinner(f"⬇️ Mengunduh {filename}..."):
                 url = f"https://drive.google.com/uc?id={file_id}&export=download&confirm=t"
-                result = gdown.download(url, filename, quiet=False, fuzzy=True)
+                result = gdown.download(url, filename, quiet=False)
                 if result is None:
                     # Fallback ke direct URL
                     gdown.download(
