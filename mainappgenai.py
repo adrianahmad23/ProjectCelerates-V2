@@ -42,9 +42,22 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
-* { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+/* Font utama — targeted, tidak pakai wildcard * agar tidak rusak icon Streamlit */
+html, body, [class*="css"], p, span:not([class*="material"]):not([data-testid]),
+h1, h2, h3, h4, h5, h6, label, div, input, textarea, select, button, a {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
 
-/* Sembunyikan teks icon yang rusak pada tombol send chat */
+/* Kembalikan font Material Symbols untuk semua icon Streamlit */
+[class*="material-symbols"],
+[class*="material-icons"],
+[data-testid="stChatInputSubmitButton"] svg,
+[data-testid="stSidebarCollapseButton"] span,
+[data-testid="collapsedControl"] span {
+    font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
+}
+
+/* Sembunyikan teks icon yang TETAP gagal render pada tombol send chat */
 [data-testid="stChatInputSubmitButton"] {
     font-size: 0 !important;
     color: transparent !important;
@@ -53,10 +66,11 @@ st.markdown("""
     width: 36px !important;
     height: 36px !important;
     position: relative !important;
+    overflow: hidden !important;
 }
 [data-testid="stChatInputSubmitButton"]::after {
     content: "↑" !important;
-    font-size: 1.1rem !important;
+    font-size: 1.2rem !important;
     color: white !important;
     font-family: sans-serif !important;
     position: absolute !important;
@@ -65,8 +79,46 @@ st.markdown("""
     transform: translate(-50%, -50%) !important;
 }
 [data-testid="stChatInputSubmitButton"] * {
-    display: none !important;
+    visibility: hidden !important;
 }
+
+/* Sidebar collapse button */
+[data-testid="stSidebarCollapseButton"] button {
+    font-size: 0 !important;
+    color: transparent !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+[data-testid="stSidebarCollapseButton"] button::after {
+    content: "‹" !important;
+    font-size: 1.4rem !important;
+    color: #64748b !important;
+    font-family: sans-serif !important;
+    position: absolute !important;
+    top: 50% !important; left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    visibility: visible !important;
+}
+[data-testid="stSidebarCollapseButton"] button * { visibility: hidden !important; }
+
+/* Collapsed sidebar open button */
+[data-testid="collapsedControl"] button {
+    font-size: 0 !important;
+    color: transparent !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+[data-testid="collapsedControl"] button::after {
+    content: "›" !important;
+    font-size: 1.4rem !important;
+    color: #64748b !important;
+    font-family: sans-serif !important;
+    position: absolute !important;
+    top: 50% !important; left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    visibility: visible !important;
+}
+[data-testid="collapsedControl"] button * { visibility: hidden !important; }
 
 .hero {
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
@@ -1460,17 +1512,21 @@ FORMAT OUTPUT — WAJIB DIIKUTI:
             if user_input and user_input.strip():
                 user_text = user_input.strip()
                 st.session_state.chat_messages.append({"role": "user", "content": user_text})
-                with st.chat_message("user", avatar="🧑"):
-                    st.markdown(user_text)
-                with st.chat_message("assistant", avatar="🤖"):
+                # Generate reply dulu, simpan ke session_state, lalu rerun
+                # agar urutan render selalu konsisten (riwayat → input)
+                with st.spinner("AI sedang mengetik..."):
                     try:
-                        reply = st.write_stream(
-                            _stream_reply(
-                                st.session_state.chat_messages[:-1], user_text))
+                        chunks = []
+                        for chunk in _stream_reply(
+                                st.session_state.chat_messages[:-1], user_text):
+                            chunks.append(chunk)
+                        reply = "".join(chunks)
                         st.session_state.chat_messages.append(
-                            {"role": "assistant", "content": _fmt(str(reply))})
+                            {"role": "assistant", "content": _fmt(reply)})
                     except Exception as e:
-                        st.error(f"Gagal menghubungi Gemini AI: {e}")
+                        st.session_state.chat_messages.append(
+                            {"role": "assistant", "content": f"⚠️ Gagal menghubungi Gemini AI: {e}"})
+                st.rerun()
 
  #          # ── Suggested questions (hanya saat chat kosong) ───────────
             if not st.session_state.chat_messages:
@@ -1495,17 +1551,19 @@ FORMAT OUTPUT — WAJIB DIIKUTI:
             if st.session_state.get("pending_sug"):
                 sug = st.session_state.pop("pending_sug")
                 st.session_state.chat_messages.append({"role": "user", "content": sug})
-                with st.chat_message("user", avatar="🧑"):
-                    st.markdown(sug)
-                with st.chat_message("assistant", avatar="🤖"):
+                with st.spinner("AI sedang mengetik..."):
                     try:
-                        reply = st.write_stream(
-                            _stream_reply(
-                                st.session_state.chat_messages[:-1], sug))
+                        chunks = []
+                        for chunk in _stream_reply(
+                                st.session_state.chat_messages[:-1], sug):
+                            chunks.append(chunk)
+                        reply = "".join(chunks)
                         st.session_state.chat_messages.append(
-                            {"role": "assistant", "content": _fmt(str(reply))})
+                            {"role": "assistant", "content": _fmt(reply)})
                     except Exception as e:
-                        st.error(f"Gagal menghubungi Gemini AI: {e}")
+                        st.session_state.chat_messages.append(
+                            {"role": "assistant", "content": f"⚠️ Gagal menghubungi Gemini AI: {e}"})
+                st.rerun()
 
             # ── Tombol hapus riwayat ────────────────────────────────────
             if st.session_state.chat_messages:
