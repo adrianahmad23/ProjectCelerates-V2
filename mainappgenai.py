@@ -44,18 +44,28 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 * { font-family: 'Plus Jakarta Sans', sans-serif !important; }
 
-/* Pulihkan font icon Material Symbols yang tertimpa wildcard di atas */
-[data-testid="stChatInputSubmitButton"] span,
-[data-testid="stChatInputSubmitButton"] *,
-.stChatInputContainer button span,
-.stChatInputContainer button *,
-span.material-symbols-rounded,
-i.material-symbols-rounded,
-[class*="material-symbols"] {
-    font-family: 'Material Symbols Rounded' !important;
-    font-style: normal !important;
-    font-size: 1.3rem !important;
-    line-height: 1 !important;
+/* Sembunyikan teks icon yang rusak pada tombol send chat */
+[data-testid="stChatInputSubmitButton"] {
+    font-size: 0 !important;
+    color: transparent !important;
+    background: #4f46e5 !important;
+    border-radius: 8px !important;
+    width: 36px !important;
+    height: 36px !important;
+    position: relative !important;
+}
+[data-testid="stChatInputSubmitButton"]::after {
+    content: "↑" !important;
+    font-size: 1.1rem !important;
+    color: white !important;
+    font-family: sans-serif !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+[data-testid="stChatInputSubmitButton"] * {
+    display: none !important;
 }
 
 .hero {
