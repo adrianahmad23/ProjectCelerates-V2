@@ -41,7 +41,9 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 * { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+.material-symbols-rounded { font-family: 'Material Symbols Rounded' !important; }
 
 .hero {
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
@@ -1286,7 +1288,7 @@ elif st.session_state.step == 3:
                 st.markdown(
                     f'<div style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0">'
                     f'<span style="width:22px;font-weight:800;color:{info["warna"]}">{code_k}</span>'
-                    f'<span style="width:80px;font-size:0.8rem;color:#64748b">{info["nama"]}</span>'
+                    f'<span style="width:110px;min-width:110px;font-size:0.8rem;color:#64748b">{info["nama"]}</span>'
                     f'<div style="flex:1;background:#e2e8f0;border-radius:999px;height:8px;overflow:hidden">'
                     f'<div style="width:{s*10:.0f}%;background:{info["warna"]};height:100%;border-radius:999px"></div>'
                     f'</div><span style="width:40px;text-align:right;font-size:0.8rem;font-weight:700;'
