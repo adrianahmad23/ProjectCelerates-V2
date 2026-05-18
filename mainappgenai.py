@@ -43,7 +43,20 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 * { font-family: 'Plus Jakarta Sans', sans-serif !important; }
-.material-symbols-rounded { font-family: 'Material Symbols Rounded' !important; }
+
+/* Pulihkan font icon Material Symbols yang tertimpa wildcard di atas */
+[data-testid="stChatInputSubmitButton"] span,
+[data-testid="stChatInputSubmitButton"] *,
+.stChatInputContainer button span,
+.stChatInputContainer button *,
+span.material-symbols-rounded,
+i.material-symbols-rounded,
+[class*="material-symbols"] {
+    font-family: 'Material Symbols Rounded' !important;
+    font-style: normal !important;
+    font-size: 1.3rem !important;
+    line-height: 1 !important;
+}
 
 .hero {
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
