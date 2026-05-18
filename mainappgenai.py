@@ -1421,7 +1421,14 @@ FORMAT OUTPUT — WAJIB DIIKUTI:
                 text = re.sub(r'(?<!' + nl + r')' + nl + r'(?!' + nl + r')', nl + nl, text)
                 return text.strip()
 
-            # ── Input chat utama ────────────────────────────────────────
+            # ── Tampilkan riwayat chat (pakai st.chat_message native) ──
+            for msg in st.session_state.chat_messages:
+                with st.chat_message("user" if msg["role"] == "user" else "assistant",
+                                     avatar="🧑" if msg["role"] == "user" else "🤖"):
+                    txt = _fmt(msg["content"]) if msg["role"] == "assistant" else msg["content"]
+                    st.markdown(txt)
+
+            # ── Input chat utama (di bawah riwayat) ────────────────────
             user_input = st.chat_input(
                 "Tanya tentang prodi, karir, atau lintas jurusan...",
                 key="chatbot_input")
@@ -1439,13 +1446,6 @@ FORMAT OUTPUT — WAJIB DIIKUTI:
                             {"role": "assistant", "content": _fmt(str(reply))})
                     except Exception as e:
                         st.error(f"Gagal menghubungi Gemini AI: {e}")
-            
-            # ── Tampilkan riwayat chat (pakai st.chat_message native) ──
-            for msg in st.session_state.chat_messages:
-                with st.chat_message("user" if msg["role"] == "user" else "assistant",
-                                     avatar="🧑" if msg["role"] == "user" else "🤖"):
-                    txt = _fmt(msg["content"]) if msg["role"] == "assistant" else msg["content"]
-                    st.markdown(txt)
 
  #          # ── Suggested questions (hanya saat chat kosong) ───────────
             if not st.session_state.chat_messages:
