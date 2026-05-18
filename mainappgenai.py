@@ -1421,6 +1421,16 @@ FORMAT OUTPUT — WAJIB DIIKUTI:
                 text = re.sub(r'(?<!' + nl + r')' + nl + r'(?!' + nl + r')', nl + nl, text)
                 return text.strip()
 
+            # ── Input chat utama ────────────────────────────────────────
+            user_input = st.chat_input(
+                "Tanya tentang prodi, karir, atau lintas jurusan...",
+                key="chatbot_input")
+            if user_input and user_input.strip():
+                user_text = user_input.strip()
+                st.session_state.chat_messages.append({"role": "user", "content": user_text})
+                st.session_state["pending_chat"] = user_text
+                st.rerun()
+            
             # ── Tampilkan riwayat chat (pakai st.chat_message native) ──
             for msg in st.session_state.chat_messages:
                 with st.chat_message("user" if msg["role"] == "user" else "assistant",
@@ -1428,7 +1438,7 @@ FORMAT OUTPUT — WAJIB DIIKUTI:
                     txt = _fmt(msg["content"]) if msg["role"] == "assistant" else msg["content"]
                     st.markdown(txt)
 
- # ── Suggested questions (hanya saat chat kosong) ───────────
+ #          # ── Suggested questions (hanya saat chat kosong) ───────────
             if not st.session_state.chat_messages:
                 st.markdown(
                     '<div style="font-size:0.83rem;color:#64748b;margin:0.5rem 0 0.4rem">'
@@ -1462,16 +1472,6 @@ FORMAT OUTPUT — WAJIB DIIKUTI:
                             {"role": "assistant", "content": _fmt(str(reply))})
                     except Exception as e:
                         st.error(f"Gagal menghubungi Gemini AI: {e}")
-
-            # ── Input chat utama ────────────────────────────────────────
-            user_input = st.chat_input(
-                "Tanya tentang prodi, karir, atau lintas jurusan...",
-                key="chatbot_input")
-            if user_input and user_input.strip():
-                user_text = user_input.strip()
-                st.session_state.chat_messages.append({"role": "user", "content": user_text})
-                st.session_state["pending_chat"] = user_text
-                st.rerun()
 
             # ── Proses pending chat (setelah rerun, urutan render bersih) ──
             if st.session_state.get("pending_chat"):
