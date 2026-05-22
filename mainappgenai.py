@@ -1255,17 +1255,30 @@ elif st.session_state.step == 3:
             st.plotly_chart(radar_rumpun(scores), use_container_width=True)
         with col_r2:
             st.markdown("#### Skor Detail RIASEC")
+            rows_html = ""
             for code_k in sorted(scores, key=scores.get, reverse=True):
                 s    = scores[code_k]
                 info = RIASEC_FULL[code_k]
-                st.markdown(
-                    f'<div style="display:flex;align-items:center;gap:0.8rem;margin:0.4rem 0">'
-                    f'<span style="width:1.5rem;font-weight:800;color:{info["warna"]}">{code_k}</span>'
-                    f'<div style="flex:1;background:#e2e8f0;border-radius:999px;height:10px;overflow:hidden">'
-                    f'<div style="width:{s*10:.0f}%;background:{info["warna"]};height:100%;border-radius:999px"></div>'
+                pct  = s * 10
+                rows_html += (
+                    f'<div style="display:flex;align-items:center;gap:12px;margin:10px 0">'
+                    f'  <span style="width:20px;font-weight:800;font-size:0.95rem;'
+                    f'    color:{info["warna"]};flex-shrink:0">{code_k}</span>'
+                    f'  <div style="flex:1;background:rgba(255,255,255,0.08);border-radius:999px;'
+                    f'    height:12px;overflow:hidden;min-width:0">'
+                    f'    <div style="width:{pct:.0f}%;background:{info["warna"]};height:100%;'
+                    f'      border-radius:999px;transition:width 0.4s ease"></div>'
+                    f'  </div>'
+                    f'  <span style="width:52px;text-align:right;font-weight:700;font-size:0.88rem;'
+                    f'    color:{info["warna"]};flex-shrink:0;white-space:nowrap">'
+                    f'    {s:.1f}<span style="opacity:0.5;font-weight:400">/10</span></span>'
                     f'</div>'
-                    f'<span style="width:3.5rem;text-align:right;font-weight:700;color:{info["warna"]}">{s:.1f}/10</span>'
-                    f'</div>', unsafe_allow_html=True)
+                )
+            st.markdown(
+                f'<div style="background:#1e293b;border-radius:14px;padding:1rem 1.2rem;">'
+                f'{rows_html}</div>',
+                unsafe_allow_html=True
+            )
 
         # ── TAB 2: ML Rumpun Recommendation ──────────────────────
     with tab2:
