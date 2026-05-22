@@ -1267,7 +1267,7 @@ elif st.session_state.step == 3:
                     f'<span style="width:3.5rem;text-align:right;font-weight:700;color:{info["warna"]}">{s:.1f}/10</span>'
                     f'</div>', unsafe_allow_html=True)
 
-# ── TAB 2: ML Rumpun Recommendation ──────────────────────
+        # ── TAB 2: ML Rumpun Recommendation ──────────────────────
 with tab2:
     if not MODEL_READY:
         st.error("Model belum tersedia.")
@@ -1488,6 +1488,7 @@ with tab2:
             paper_bgcolor="rgba(0,0,0,0)",
             title=dict(text="Radar Nilai Akademik", x=0.5))
         st.plotly_chart(fig_n, use_container_width=True)
+    
     # ── TAB 3: SUMMARY & CHATBOT ─────────────────────────────
     with tab3:
 
