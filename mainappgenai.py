@@ -1267,73 +1267,227 @@ elif st.session_state.step == 3:
                     f'<span style="width:3.5rem;text-align:right;font-weight:700;color:{info["warna"]}">{s:.1f}/10</span>'
                     f'</div>', unsafe_allow_html=True)
 
-    # ── TAB 2: ML Rumpun Recommendation ──────────────────────
-    with tab2:
-        if not MODEL_READY:
-            st.error(f" Model belum tersedia. Jalankan `train_rumpun.py` terlebih dahulu.")
-        elif not hasil_ml:
-            st.warning(" Hasil ML tidak tersedia.")
-        else:
-            st.markdown("#### Top 5 Rumpun Terbaik Untukmu")
+# ── TAB 2: ML Rumpun Recommendation ──────────────────────
+with tab2:
+    if not MODEL_READY:
+        st.error("Model belum tersedia.")
+    elif not hasil_ml:
+        st.warning("Hasil ML tidak tersedia.")
+    else:
+        st.markdown("#### Top 5 Rumpun Terbaik Untukmu")
 
-            rank_cls = ["rank-1","rank-2","rank-3","rank-1","rank-2"]
-            medals   = ["🥇","🥈","🥉","4️⃣","5️⃣"]
+        medals = ["🥇","🥈","🥉","4️⃣","5️⃣"]
+        rank_border_colors = ["#f59e0b","#0ea5e9","#22c55e","#f59e0b","#0ea5e9"]
 
-            for i, r in enumerate(hasil_ml[:5]):
-                rump = r["rumpun"]
-                info = RUMPUN_INFO.get(rump, {})
-                dom_r_str = " · ".join(
-                    f'<span style="background:{RIASEC_FULL[k]["warna"]}20;'
-                    f'color:{RIASEC_FULL[k]["warna"]};padding:2px 8px;border-radius:999px;'
-                    f'font-weight:700;font-size:0.75rem">{k}</span>'
-                    for k in info.get("riasec", []))
+        for i, r in enumerate(hasil_ml[:5]):
+            rump = r["rumpun"]
+            info = RUMPUN_INFO.get(rump, {})
+            warna = info.get("warna", "#4f46e5")
 
-                jurusan_pills = "".join(
-                    f'<span style="display:inline-block;background:#334155;border:1px solid #475569;'
-                    f'border-radius:6px;padding:0.2rem 0.6rem;margin:0.2rem;'
-                    f'font-size:0.76rem;font-weight:600;color:#cbd5e1">{j}</span>'
-                    for j in info.get("jurusan", [])[:6])
+            # ── RIASEC pills ──
+            riasec_pills = " · ".join(
+                f'<span style="background:{RIASEC_FULL[k]["warna"]}20;'
+                f'color:{RIASEC_FULL[k]["warna"]};padding:2px 8px;border-radius:999px;'
+                f'font-weight:700;font-size:0.75rem">{k}</span>'
+                for k in info.get("riasec", []))
 
-                st.markdown(
-                    f'<div class="rumpun-card {rank_cls[i % 3]}">'
-                    f'<div style="display:flex;justify-content:space-between;align-items:start;gap:1rem">'
-                    f'<div style="flex:1">'
-                    f'<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem">'
-                    f'<div>'
-                    f'<div style="font-weight:800;font-size:1.1rem;color:#f1f5f9">{rump}</div>'
-                    f'<div style="font-size:0.82rem;color:#94a3b8">{info.get("deskripsi","")}</div>'
-                    f'</div></div>'
-                    f'<div style="margin:0.5rem 0 0.3rem">{dom_r_str}</div>'
-                    f'<div style="font-size:0.82rem;color:#94a3b8;margin:0.3rem 0">'
-                    f'Karir: {info.get("karir","")}</div>'
-                    f'<div style="margin-top:0.4rem">{jurusan_pills}</div>'
+            # ── Jurusan rows dengan karir per prodi ──
+            # Mapping karir per jurusan (per rumpun)
+            KARIR_PER_JURUSAN = {
+                "Teknik & Informatika": {
+                    "Teknik Informatika":     ("Software Engineer, Backend Dev, Tech Lead", ["R","I"]),
+                    "Ilmu Komputer":          ("Computer Scientist, Researcher, AI Engineer", ["I","C"]),
+                    "Data Science":           ("Data Scientist, ML Engineer, Business Analyst", ["I","C"]),
+                    "Kecerdasan Buatan":      ("AI Engineer, Researcher, NLP/CV Specialist", ["I","C"]),
+                    "Rekayasa Perangkat Lunak":("Software Engineer, QA Engineer, DevOps", ["R","I"]),
+                    "Cyber Security":         ("Security Analyst, Penetration Tester, SOC", ["I","C"]),
+                    "Sistem Informasi":       ("System Analyst, IT Consultant, ERP Specialist", ["C","I"]),
+                    "Teknik Elektro":         ("Electrical Engineer, IoT Developer, PLN", ["R","I"]),
+                    "Teknik Mesin":           ("Mechanical Engineer, Manufacturing, R&D", ["R","I"]),
+                    "Teknik Sipil":           ("Civil Engineer, Quantity Surveyor, PM", ["R","C"]),
+                    "Teknik Kimia":           ("Process Engineer, Petrochemical, R&D", ["R","I"]),
+                    "Teknik Industri":        ("Industrial Engineer, Supply Chain, Lean", ["R","C"]),
+                    "Arsitektur":             ("Arsitek, Urban Planner, Interior Designer", ["A","R"]),
+                    "Teknik Perminyakan":     ("Petroleum Engineer, Drilling, Geoscientist", ["R","I"]),
+                },
+                "Sains & MIPA": {
+                    "Matematika":    ("Aktuaris, Data Analyst, Dosen, Peneliti", ["I","C"]),
+                    "Statistika":    ("Statistikawan, Data Scientist, Analis survei", ["I","C"]),
+                    "Aktuaria":      ("Aktuaris asuransi/pensiun, Risk analyst", ["I","C"]),
+                    "Fisika":        ("Peneliti, Insinyur instrumentasi, Fisikawan medis", ["R","I"]),
+                    "Kimia":         ("Analis kimia, Peneliti farmasi, QC industri", ["R","I"]),
+                    "Biologi":       ("Peneliti hayati, Konsultan lingkungan, Akademisi", ["R","I"]),
+                    "Bioteknologi":  ("Peneliti biotek, Industri pangan/farmasi, Biomedis", ["R","I"]),
+                    "Astronomi":     ("Astronom, Peneliti LAPAN, Akademisi", ["I","R"]),
+                    "Geofisika":     ("Geofisikawan, Eksplorasi migas, BMKG", ["R","I"]),
+                    "Oseanografi":   ("Oseanografer, Peneliti KKP, Konsultan lingkungan laut", ["R","I"]),
+                },
+                "Kesehatan & Kedokteran": {
+                    "Kedokteran":         ("Dokter umum/spesialis, Peneliti klinis", ["I","S"]),
+                    "Kedokteran Gigi":    ("Dokter Gigi, Orthodontist, Peneliti gigi", ["I","R"]),
+                    "Farmasi":            ("Apoteker, Peneliti obat, Regulasi farmasi", ["I","C"]),
+                    "Keperawatan":        ("Perawat, Nurse Manager, Peneliti keperawatan", ["S","R"]),
+                    "Kebidanan":          ("Bidan, Konselor maternal, Kesehatan reproduksi", ["S","R"]),
+                    "Kesehatan Masyarakat":("Epidemiolog, Promotor kesehatan, WHO/Dinkes", ["S","I"]),
+                    "Gizi":               ("Ahli Gizi, Dietisien, Konsultan nutrisi", ["S","I"]),
+                    "Kedokteran Hewan":   ("Dokter Hewan, Peneliti veteriner, Karantina", ["R","I"]),
+                    "Fisioterapi":        ("Fisioterapis, Rehabilitasi medik, Sport physio", ["R","S"]),
+                    "Analis Kesehatan":   ("Analis lab, Patologi klinik, Penelitian diagnostik", ["I","C"]),
+                },
+                "Ekonomi & Bisnis": {
+                    "Akuntansi":           ("Akuntan publik, Auditor, CFO, Tax consultant", ["C","I"]),
+                    "Manajemen":           ("Manajer, Business Analyst, Entrepreneur", ["E","C"]),
+                    "Ilmu Ekonomi":        ("Ekonom, Policy analyst, Peneliti ekonomi", ["I","C"]),
+                    "Keuangan":            ("Financial Analyst, Investment Banker, CFP", ["C","I"]),
+                    "Perbankan & Keuangan":("Banker, Credit Analyst, Treasury Officer", ["C","E"]),
+                    "Manajemen Pemasaran": ("Marketing Manager, Brand Strategist, Digital Marketer", ["E","A"]),
+                    "Bisnis Digital":      ("Digital Entrepreneur, E-commerce Manager, Growth Hacker", ["E","I"]),
+                    "Manajemen SDM":       ("HR Manager, Talent Acquisition, L&D Specialist", ["S","E"]),
+                },
+                "Hukum & Ilmu Sosial": {
+                    "Hukum":                 ("Pengacara, Notaris, Hakim, Legal counsel", ["I","E"]),
+                    "Ilmu Politik":          ("Politisi, Analis kebijakan, Diplomat", ["E","S"]),
+                    "Hubungan Internasional":("Diplomat, NGO Officer, Analis geopolitik", ["E","S"]),
+                    "Sosiologi":             ("Peneliti sosial, Konsultan CSR, Akademisi", ["S","I"]),
+                    "Antropologi":           ("Antropolog, Peneliti budaya, Museum kurator", ["S","I"]),
+                    "Psikologi":             ("Psikolog, HRD, Konselor, UX Researcher", ["S","I"]),
+                    "Administrasi Publik":   ("PNS, Policy analyst, Pemda, Akademisi", ["C","S"]),
+                    "Kriminologi":           ("Kriminolog, Analis kejahatan, Penyidik", ["I","S"]),
+                },
+                "Pendidikan & Keguruan": {
+                    "Pendidikan Guru SD":         ("Guru SD, Kepala Sekolah, Konsultan pendidikan", ["S","C"]),
+                    "Pendidikan Anak Usia Dini":  ("Guru PAUD/TK, Child development specialist", ["S","A"]),
+                    "Pendidikan Matematika":      ("Guru matematika, Dosen, Pengembang kurikulum", ["S","I"]),
+                    "Pendidikan Fisika":          ("Guru fisika, Dosen, Peneliti pendidikan sains", ["S","I"]),
+                    "Pendidikan Bahasa Inggris":  ("Guru B.Ing, Penerjemah, Language trainer", ["S","A"]),
+                    "Bimbingan Konseling":        ("Konselor, BK sekolah, Psikolog pendidikan", ["S","E"]),
+                    "Pendidikan Biologi":         ("Guru biologi, Dosen, Peneliti pendidikan", ["S","I"]),
+                    "Pendidikan Bahasa Indonesia":("Guru B.Indo, Editor, Jurnalis pendidikan", ["S","A"]),
+                },
+                "Komunikasi & Media": {
+                    "Ilmu Komunikasi":        ("Communication specialist, PR, Media planner", ["E","S"]),
+                    "Jurnalistik":            ("Jurnalis, Editor, Investigative reporter", ["A","E"]),
+                    "Public Relations":       ("PR Manager, Brand communicator, Crisis comm.", ["E","S"]),
+                    "Penyiaran (Broadcasting)":("Penyiar, Produser TV/radio, Content Creator", ["A","E"]),
+                    "Periklanan":             ("Copywriter, Art Director, Account Executive", ["A","E"]),
+                    "Pariwisata":             ("Tour guide, Event planner, Destination manager", ["E","S"]),
+                    "Perhotelan":             ("Hotel manager, Front Office, F&B Manager", ["E","S"]),
+                },
+                "Seni & Desain": {
+                    "Desain Komunikasi Visual":("DKV Designer, Art Director, Brand Designer", ["A","I"]),
+                    "Desain Grafis":           ("Graphic Designer, UI/UX Designer, Illustrator", ["A","I"]),
+                    "Animasi":                 ("Animator, Motion Designer, VFX Artist", ["A","R"]),
+                    "Seni Rupa":               ("Seniman, Kurator, Art Director", ["A","I"]),
+                    "Seni Musik":              ("Musisi, Music Producer, Guru musik", ["A","E"]),
+                    "Film dan Televisi":       ("Sutradara, Produser, Sinematografer", ["A","E"]),
+                    "Fotografi":               ("Fotografer, Photo Editor, Creative Director", ["A","R"]),
+                    "Seni Tari":               ("Penari, Koreografer, Guru seni tari", ["A","S"]),
+                },
+                "Bahasa & Sastra": {
+                    "Sastra Inggris":     ("Penerjemah, Content Writer, Dosen, Editor", ["A","S"]),
+                    "Sastra Indonesia":   ("Penulis, Editor, Jurnalis, Akademisi", ["A","S"]),
+                    "Sastra Jepang":      ("Penerjemah Jepang, Diplomat, Guru bahasa", ["A","I"]),
+                    "Sastra Arab":        ("Penerjemah Arab, Diplomat, Peneliti Islam", ["A","I"]),
+                    "Sastra Mandarin":    ("Penerjemah Mandarin, Bisnis Tiongkok, Diplomat", ["A","I"]),
+                    "Linguistik":         ("Linguis, NLP Researcher, Pengembang kamus", ["I","A"]),
+                    "Ilmu Perpustakaan":  ("Pustakawan, Arsiparis, Knowledge Manager", ["C","I"]),
+                },
+                "Pertanian & Lingkungan": {
+                    "Agroteknologi":    ("Agronomis, Peneliti tanaman, Penyuluh pertanian", ["R","I"]),
+                    "Agribisnis":       ("Agripreneur, Manajer perkebunan, Konsultan agribisnis", ["E","R"]),
+                    "Peternakan":       ("Peternak, Peneliti hewan, Konsultan nutrisi ternak", ["R","S"]),
+                    "Perikanan":        ("Ahli perikanan, Peneliti KKP, Aquaculture specialist", ["R","I"]),
+                    "Kehutanan":        ("Forester, Konservasi hutan, Peneliti lingkungan", ["R","I"]),
+                    "Teknologi Pangan": ("Food technologist, QC pangan, Peneliti gizi", ["R","I"]),
+                    "Ilmu Tanah":       ("Soil scientist, Agronomis, Konsultan lahan", ["R","I"]),
+                },
+            }
+
+            karir_map = KARIR_PER_JURUSAN.get(rump, {})
+            jurusan_list = info.get("jurusan", [])
+
+            jurusan_rows_html = ""
+            for j in jurusan_list[:8]:
+                karir_info = karir_map.get(j)
+                if karir_info:
+                    karir_txt, riasec_tags = karir_info
+                else:
+                    karir_txt = info.get("karir", "")
+                    riasec_tags = info.get("riasec", [])
+
+                riasec_tag_html = "".join(
+                    f'<span style="display:inline-block;background:{RIASEC_FULL[k]["warna"]}20;'
+                    f'color:{RIASEC_FULL[k]["warna"]};padding:1px 7px;border-radius:4px;'
+                    f'font-size:0.72rem;font-weight:700;margin-left:4px">{k}</span>'
+                    for k in riasec_tags)
+
+                jurusan_rows_html += (
+                    f'<div style="display:flex;align-items:flex-start;gap:10px;'
+                    f'padding:7px 0;border-bottom:0.5px solid rgba(100,116,139,0.15)">'
+                    f'<span style="min-width:150px;font-size:0.83rem;font-weight:600;'
+                    f'color:#f1f5f9;flex-shrink:0">{j}</span>'
+                    f'<span style="color:#94a3b8;font-size:0.78rem;flex:1;padding-top:1px">'
+                    f'{karir_txt}</span>'
+                    f'<span style="flex-shrink:0">{riasec_tag_html}</span>'
                     f'</div>'
-                    f'<div style="text-align:right;min-width:80px">'
-                    f'<div style="font-size:2rem;font-weight:900;color:{info.get("warna","#4f46e5")}">'
-                    f'{r["prob"]}%</div>'
-                    f'<div style="font-size:0.75rem;color:#64748b">kecocokan</div>'
-                    f'</div></div></div>', unsafe_allow_html=True)
+                )
 
-                st.progress(r["prob"]/100)
-                st.markdown("")
+            st.markdown(
+                f'<div style="background:#1e293b;border-radius:14px;margin-bottom:1.2rem;'
+                f'overflow:hidden;border-left:4px solid {warna}">'
 
-            # Nilai Academic radar
-            st.markdown("---")
-            st.markdown("#### Profil Nilai Akademik")
-            vals_n = [st.session_state.nilai.get(k, 0) for k in MAPEL_ALL]
-            fig_n  = go.Figure(go.Scatterpolar(
-                r=vals_n+[vals_n[0]],
-                theta=NILAI_LABELS+[NILAI_LABELS[0]],
-                fill="toself", name="Nilaimu",
-                line=dict(color="#f59e0b",width=2.5),
-                fillcolor="rgba(245,158,11,0.2)"))
-            fig_n.update_layout(
-                polar=dict(radialaxis=dict(visible=True, range=[0,100])),
-                showlegend=False, height=380,
-                paper_bgcolor="rgba(0,0,0,0)",
-                title=dict(text="Radar Nilai Akademik", x=0.5))
-            st.plotly_chart(fig_n, use_container_width=True)
+                f'<div style="display:flex;justify-content:space-between;align-items:start;'
+                f'padding:14px 18px 10px;gap:1rem">'
+                f'<div>'
+                f'<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:3px">'
+                f'<span style="font-size:1.1rem">{medals[i]}</span>'
+                f'<span style="font-size:1.05rem;font-weight:700;color:#f1f5f9">{rump}</span>'
+                f'</div>'
+                f'<div style="font-size:0.8rem;color:#64748b">{info.get("deskripsi","")}</div>'
+                f'</div>'
+                f'<div style="text-align:right;flex-shrink:0">'
+                f'<div style="font-size:2rem;font-weight:900;color:{warna}">{r["prob"]}%</div>'
+                f'<div style="font-size:0.7rem;color:#64748b">kecocokan</div>'
+                f'</div></div>'
 
+                f'<div style="padding:6px 18px 8px;border-top:0.5px solid rgba(100,116,139,0.2);'
+                f'border-bottom:0.5px solid rgba(100,116,139,0.2)">'
+                f'<span style="font-size:0.75rem;color:#64748b;margin-right:6px">RIASEC:</span>'
+                f'{riasec_pills}</div>'
+
+                f'<div style="padding:0 18px 6px">'
+                f'<div style="display:flex;align-items:center;gap:8px;padding:8px 0 6px;'
+                f'border-bottom:0.5px solid rgba(100,116,139,0.3)">'
+                f'<span style="min-width:150px;font-size:0.72rem;font-weight:700;color:#475569;'
+                f'text-transform:uppercase;letter-spacing:0.05em">Jurusan / Prodi</span>'
+                f'<span style="flex:1;font-size:0.72rem;font-weight:700;color:#475569;'
+                f'text-transform:uppercase;letter-spacing:0.05em">Karir</span>'
+                f'<span style="font-size:0.72rem;font-weight:700;color:#475569;'
+                f'text-transform:uppercase;letter-spacing:0.05em">RIASEC</span>'
+                f'</div>'
+                f'{jurusan_rows_html}'
+                f'</div></div>',
+                unsafe_allow_html=True)
+
+            st.progress(r["prob"] / 100)
+            st.markdown("")
+
+        # Nilai Academic radar
+        st.markdown("---")
+        st.markdown("#### Profil Nilai Akademik")
+        vals_n = [st.session_state.nilai.get(k, 0) for k in MAPEL_ALL]
+        fig_n  = go.Figure(go.Scatterpolar(
+            r=vals_n+[vals_n[0]],
+            theta=NILAI_LABELS+[NILAI_LABELS[0]],
+            fill="toself", name="Nilaimu",
+            line=dict(color="#f59e0b",width=2.5),
+            fillcolor="rgba(245,158,11,0.2)"))
+        fig_n.update_layout(
+            polar=dict(radialaxis=dict(visible=True, range=[0,100])),
+            showlegend=False, height=380,
+            paper_bgcolor="rgba(0,0,0,0)",
+            title=dict(text="Radar Nilai Akademik", x=0.5))
+        st.plotly_chart(fig_n, use_container_width=True)
     # ── TAB 3: SUMMARY & CHATBOT ─────────────────────────────
     with tab3:
 
